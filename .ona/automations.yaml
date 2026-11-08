@@ -1,0 +1,30 @@
+tasks:
+  install-deps:
+    name: Install dependencies
+    description: Install Python backend and Node.js frontend dependencies.
+    command: |
+      python3 -m venv .venv
+      .venv/bin/pip install --upgrade pip --quiet
+      .venv/bin/pip install -r backend/requirements.txt --quiet
+      npm install --silent
+    triggeredBy:
+      - postDevcontainerStart
+
+services:
+  backend:
+    name: FastAPI Backend
+    description: Uvicorn/FastAPI OSINT backend on port 8000.
+    commands:
+      start: |
+        cd backend && ../.venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+      ready: |
+        curl -sf http://localhost:8000/docs > /dev/null
+
+  frontend:
+    name: Next.js Frontend
+    description: Next.js dev server on port 3000.
+    commands:
+      start: |
+        NEXT_TELEMETRY_DISABLED=1 NEXT_PUBLIC_API_BASE="http://127.0.0.1:8000" npm run dev -- --hostname 0.0.0.0 --port 3000
+      ready: |
+        curl -sf http://localhost:3000 > /dev/null
